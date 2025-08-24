@@ -629,7 +629,7 @@ export class Transformer extends Group {
           new Path({
             data: d,
             stroke: 'black',
-            strokeWidth: 2,
+            strokeWidth: 3,
             lineCap: 'round',
             lineJoin: 'round',
           })
@@ -1223,6 +1223,19 @@ export class Transformer extends Group {
       });
     });
 
+    // enlarge rotate handle by 25%
+    const rotaterScale = 1.25;
+    const rotaterNode = this.findOne<Rect>('.rotater');
+    if (rotaterNode) {
+      const rotaterSize = anchorSize * rotaterScale;
+      rotaterNode.setAttrs({
+        width: rotaterSize,
+        height: rotaterSize,
+        offsetX: rotaterSize / 2,
+        offsetY: rotaterSize / 2,
+      });
+    }
+
     this._batchChangeChild('.top-left', {
       x: 0,
       y: 0,
@@ -1285,7 +1298,7 @@ export class Transformer extends Group {
     // ensure rotate handle is circular
     const rotaterAnchor = this.findOne<Rect>('.rotater');
     if (rotaterAnchor) {
-      rotaterAnchor.cornerRadius(anchorSize / 2);
+      rotaterAnchor.cornerRadius(rotaterAnchor.width() / 2);
     }
 
     // position/scale the icon inside rotate handle
@@ -1293,7 +1306,7 @@ export class Transformer extends Group {
     if (iconGroup && rotaterAnchor) {
       iconGroup.position({ x: rotaterAnchor.x(), y: rotaterAnchor.y() });
       iconGroup.offset({ x: 12, y: 12 });
-      const k = anchorSize / 24;
+      const k = rotaterAnchor.width() / 24;
       iconGroup.scale({ x: k, y: k });
       iconGroup.visible(this.rotateEnabled());
     }
