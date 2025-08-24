@@ -4,6 +4,7 @@ import { Node } from '../Node.ts';
 import { Shape } from '../Shape.ts';
 import { Rect } from './Rect.ts';
 import { Group } from '../Group.ts';
+import { Path } from './Path.ts';
 import type { ContainerConfig } from '../Container.ts';
 import { Konva } from '../Global.ts';
 import { getBooleanValidator, getNumberValidator } from '../Validators.ts';
@@ -610,6 +611,37 @@ export class Transformer extends Group {
       this._cursorChange = false;
     });
     this.add(anchor);
+
+    // add refresh-ccw icon to rotation handle
+    if (name === 'rotater') {
+      const iconGroup = new Group({
+        name: 'rotater-icon',
+        listening: false,
+      });
+      const pathsData = [
+        'M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8',
+        'M3 3v5h5',
+        'M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16',
+        'M16 16h5v5',
+      ];
+      pathsData.forEach((d) => {
+        iconGroup.add(
+          new Path({
+            data: d,
+            stroke: 'black',
+            strokeWidth: 2,
+            lineCap: 'round',
+            lineJoin: 'round',
+          })
+        );
+      });
+      this.add(iconGroup);
+
+      // keep icon in sync with anchor while dragging
+      anchor.on('xChange yChange', () => {
+        iconGroup.position({ x: anchor.x(), y: anchor.y() });
+      });
+    }
   }
   _createBack() {
     const back = new Shape({
@@ -1249,6 +1281,22 @@ export class Transformer extends Group {
       y: -this.rotateAnchorOffset() * Util._sign(height) - padding,
       visible: this.rotateEnabled(),
     });
+
+    // ensure rotate handle is circular
+    const rotaterAnchor = this.findOne<Rect>('.rotater');
+    if (rotaterAnchor) {
+      rotaterAnchor.cornerRadius(anchorSize / 2);
+    }
+
+    // position/scale the icon inside rotate handle
+    const iconGroup = this.findOne<Group>('.rotater-icon');
+    if (iconGroup && rotaterAnchor) {
+      iconGroup.position({ x: rotaterAnchor.x(), y: rotaterAnchor.y() });
+      iconGroup.offset({ x: 12, y: 12 });
+      const k = anchorSize / 24;
+      iconGroup.scale({ x: k, y: k });
+      iconGroup.visible(this.rotateEnabled());
+    }
 
     this._batchChangeChild('.back', {
       width: width,

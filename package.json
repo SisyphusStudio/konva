@@ -1,6 +1,6 @@
 {
   "name": "@sisyphusstudio/konva",
-  "version": "9.3.22",
+  "version": "9.3.22.1",
   "description": "HTML5 2d canvas library.",
   "author": "Anton Lavrenov",
   "type": "module",
