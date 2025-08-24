@@ -106,6 +106,9 @@ function getCursor(anchorName, rad, rotateCursor) {
   if (anchorName === 'rotater') {
     return rotateCursor;
   }
+  if (anchorName === 'center') {
+    return 'move';
+  }
 
   rad += Util.degToRad(ANGLES[anchorName] || 0);
   const angle = ((Util.radToDeg(rad) % 360) + 360) % 360;
@@ -150,6 +153,7 @@ const ANCHORS_NAMES = [
   'bottom-left',
   'bottom-center',
   'bottom-right',
+  'center',
 ];
 
 const MAX_SAFE_INTEGER = 100000000;
@@ -791,6 +795,31 @@ export class Transformer extends Group {
       return;
     }
 
+    // dragging the center anchor moves the whole selection without resizing
+    if (this._movingAnchorName === 'center') {
+      const topLeft = this.findOne('.top-left')!;
+      const bottomRight = this.findOne('.bottom-right')!;
+      const oldCenterAbs = { x: oldAbs.x, y: oldAbs.y };
+      const newCenterAbs = { x: newAbs.x, y: newAbs.y };
+      const dx = newCenterAbs.x - oldCenterAbs.x;
+      const dy = newCenterAbs.y - oldCenterAbs.y;
+      const topLeftAbs = topLeft.getAbsolutePosition();
+      const newTopLeftAbs = { x: topLeftAbs.x + dx, y: topLeftAbs.y + dy };
+      const width = bottomRight.x() - topLeft.x();
+      const height = bottomRight.y() - topLeft.y();
+      this._fitNodesInto(
+        {
+          x: newTopLeftAbs.x,
+          y: newTopLeftAbs.y,
+          width: width,
+          height: height,
+          rotation: Konva.getAngle(this.rotation()),
+        },
+        e
+      );
+      return;
+    }
+
     const shiftBehavior = this.shiftBehavior();
 
     let keepProportion: boolean;
@@ -1295,10 +1324,21 @@ export class Transformer extends Group {
       visible: this.rotateEnabled(),
     });
 
+    // center handle (draggable for moving selection)
+    this._batchChangeChild('.center', {
+      x: width / 2,
+      y: height / 2,
+      visible: true,
+    });
+
     // ensure rotate handle is circular
     const rotaterAnchor = this.findOne<Rect>('.rotater');
     if (rotaterAnchor) {
       rotaterAnchor.cornerRadius(rotaterAnchor.width() / 2);
+    }
+    const centerAnchor = this.findOne<Rect>('.center');
+    if (centerAnchor) {
+      centerAnchor.cornerRadius(centerAnchor.width() / 2);
     }
 
     // position/scale the icon inside rotate handle
