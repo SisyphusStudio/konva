@@ -645,6 +645,37 @@ export class Transformer extends Group {
       anchor.on('xChange yChange', () => {
         iconGroup.position({ x: anchor.x(), y: anchor.y() });
       });
+    } else if (name === 'center') {
+      // add move icon to center handle
+      const iconGroup = new Group({
+        name: 'center-icon',
+        listening: false,
+      });
+      const pathsData = [
+        'M12 2v20',
+        'm15 19-3 3-3-3',
+        'm19 9 3 3-3 3',
+        'M2 12h20',
+        'm5 9-3 3 3 3',
+        'm9 5 3-3 3 3',
+      ];
+      pathsData.forEach((d) => {
+        iconGroup.add(
+          new Path({
+            data: d,
+            stroke: 'black',
+            strokeWidth: 3,
+            lineCap: 'round',
+            lineJoin: 'round',
+          })
+        );
+      });
+      this.add(iconGroup);
+
+      // keep icon in sync with anchor while dragging
+      anchor.on('xChange yChange', () => {
+        iconGroup.position({ x: anchor.x(), y: anchor.y() });
+      });
     }
   }
   _createBack() {
@@ -1349,6 +1380,16 @@ export class Transformer extends Group {
       const k = rotaterAnchor.width() / 24;
       iconGroup.scale({ x: k, y: k });
       iconGroup.visible(this.rotateEnabled());
+    }
+
+    // position/scale the icon inside center handle
+    const centerIconGroup = this.findOne<Group>('.center-icon');
+    if (centerIconGroup && centerAnchor) {
+      centerIconGroup.position({ x: centerAnchor.x(), y: centerAnchor.y() });
+      centerIconGroup.offset({ x: 12, y: 12 });
+      const ck = centerAnchor.width() / 24;
+      centerIconGroup.scale({ x: ck, y: ck });
+      centerIconGroup.visible(true);
     }
 
     this._batchChangeChild('.back', {
