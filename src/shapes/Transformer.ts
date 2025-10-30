@@ -1409,6 +1409,13 @@ export class Transformer extends Group {
         styleFunc(node);
       });
     }
+    // ensure icons visibility follows final anchor visibility
+    if (iconGroup && rotaterAnchor) {
+      iconGroup.visible(rotaterAnchor.visible());
+    }
+    if (centerIconGroup && centerAnchor) {
+      centerIconGroup.visible(centerAnchor.visible());
+    }
     this.getLayer()?.batchDraw();
   }
   /**
